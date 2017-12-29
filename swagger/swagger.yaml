@@ -1,0 +1,134 @@
+consumes:
+- application/json
+- application/xml
+- application/gob
+- application/x-gob
+definitions:
+  CreateStatePayload:
+    example:
+      state: Ut nostrum.
+    properties:
+      state:
+        example: Ut nostrum.
+        type: string
+    required:
+    - state
+    title: CreateStatePayload
+    type: object
+  CyclesState:
+    description: State of the Cycles frontend application (default view)
+    example:
+      state: Impedit enim est.
+    properties:
+      state:
+        description: JSON state of the application
+        example: Impedit enim est.
+        type: string
+    title: 'Mediatype identifier: application/cycles.state+json; view=default'
+    type: object
+  error:
+    description: Error response media type (default view)
+    example:
+      code: invalid_value
+      detail: Value of ID must be an integer
+      id: 3F1FKVRR
+      meta:
+        timestamp: 1.458609e+09
+      status: "400"
+    properties:
+      code:
+        description: an application-specific error code, expressed as a string value.
+        example: invalid_value
+        type: string
+      detail:
+        description: a human-readable explanation specific to this occurrence of the
+          problem.
+        example: Value of ID must be an integer
+        type: string
+      id:
+        description: a unique identifier for this particular occurrence of the problem.
+        example: 3F1FKVRR
+        type: string
+      meta:
+        additionalProperties: true
+        description: a meta object containing non-standard meta-information about
+          the error.
+        example:
+          timestamp: 1.458609e+09
+        type: object
+      status:
+        description: the HTTP status code applicable to this problem, expressed as
+          a string value.
+        example: "400"
+        type: string
+    title: 'Mediatype identifier: application/vnd.goa.error; view=default'
+    type: object
+host: localhost:8081
+info:
+  description: The sur-mesure project management tool for teams working with cycles
+  title: Project management for teams working with cycles
+  version: ""
+paths:
+  /states/:
+    post:
+      description: Create a new state
+      operationId: state#create
+      parameters:
+      - in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/CreateStatePayload'
+      produces:
+      - application/vnd.goa.error
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/error'
+      schemes:
+      - http
+      summary: create state
+      tags:
+      - state
+  /states/latest:
+    get:
+      description: Get latest state
+      operationId: state#show
+      produces:
+      - application/cycles.state+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/CyclesState'
+        "404":
+          description: Not Found
+      schemes:
+      - http
+      summary: show state
+      tags:
+      - state
+produces:
+- application/json
+- application/xml
+- application/gob
+- application/x-gob
+responses:
+  Created:
+    description: Created
+  NotFound:
+    description: Not Found
+  OK:
+    description: OK
+    schema:
+      $ref: '#/definitions/CyclesState'
+schemes:
+- http
+swagger: "2.0"
