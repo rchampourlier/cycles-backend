@@ -10,6 +10,8 @@ var _ = API("cycles", func() {
 	Description("The sur-mesure project management tool for teams working with cycles")
 	Scheme("http")
 	Host("localhost:8081")
+	Consumes("application/json")
+	Produces("application/json")
 })
 
 var _ = Resource("state", func() {
@@ -32,6 +34,10 @@ var _ = Resource("state", func() {
 		Response(Created)
 		Response(BadRequest, ErrorMedia)
 		Response(InternalServerError, ErrorMedia)
+	})
+
+	Origin("http://localhost:8080", func() {
+		Headers("Content-Type")
 	})
 })
 

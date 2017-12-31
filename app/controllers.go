@@ -13,6 +13,7 @@ package app
 import (
 	"context"
 	"github.com/goadesign/goa"
+	"github.com/goadesign/goa/cors"
 	"net/http"
 )
 
@@ -20,11 +21,7 @@ import (
 func initService(service *goa.Service) {
 	// Setup encoders and decoders
 	service.Encoder.Register(goa.NewJSONEncoder, "application/json")
-	service.Encoder.Register(goa.NewGobEncoder, "application/gob", "application/x-gob")
-	service.Encoder.Register(goa.NewXMLEncoder, "application/xml")
 	service.Decoder.Register(goa.NewJSONDecoder, "application/json")
-	service.Decoder.Register(goa.NewGobDecoder, "application/gob", "application/x-gob")
-	service.Decoder.Register(goa.NewXMLDecoder, "application/xml")
 
 	// Setup default encoder and decoder
 	service.Encoder.Register(goa.NewJSONEncoder, "*/*")
@@ -42,6 +39,8 @@ type StateController interface {
 func MountStateController(service *goa.Service, ctrl StateController) {
 	initService(service)
 	var h goa.Handler
+	service.Mux.Handle("OPTIONS", "/states/", ctrl.MuxHandler("preflight", handleStateOrigin(cors.HandlePreflight()), nil))
+	service.Mux.Handle("OPTIONS", "/states/latest", ctrl.MuxHandler("preflight", handleStateOrigin(cors.HandlePreflight()), nil))
 
 	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
 		// Check if there was an error loading the request
@@ -61,6 +60,7 @@ func MountStateController(service *goa.Service, ctrl StateController) {
 		}
 		return ctrl.Create(rctx)
 	}
+	h = handleStateOrigin(h)
 	service.Mux.Handle("POST", "/states/", ctrl.MuxHandler("create", h, unmarshalCreateStatePayload))
 	service.LogInfo("mount", "ctrl", "State", "action", "Create", "route", "POST /states/")
 
@@ -76,8 +76,34 @@ func MountStateController(service *goa.Service, ctrl StateController) {
 		}
 		return ctrl.Show(rctx)
 	}
+	h = handleStateOrigin(h)
 	service.Mux.Handle("GET", "/states/latest", ctrl.MuxHandler("show", h, nil))
 	service.LogInfo("mount", "ctrl", "State", "action", "Show", "route", "GET /states/latest")
+}
+
+// handleStateOrigin applies the CORS response headers corresponding to the origin.
+func handleStateOrigin(h goa.Handler) goa.Handler {
+
+	return func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		origin := req.Header.Get("Origin")
+		if origin == "" {
+			// Not a CORS request
+			return h(ctx, rw, req)
+		}
+		if cors.MatchOrigin(origin, "http://localhost:8080") {
+			ctx = goa.WithLogContext(ctx, "origin", origin)
+			rw.Header().Set("Access-Control-Allow-Origin", origin)
+			rw.Header().Set("Vary", "Origin")
+			rw.Header().Set("Access-Control-Allow-Credentials", "false")
+			if acrm := req.Header.Get("Access-Control-Request-Method"); acrm != "" {
+				// We are handling a preflight request
+				rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+			}
+			return h(ctx, rw, req)
+		}
+
+		return h(ctx, rw, req)
+	}
 }
 
 // unmarshalCreateStatePayload unmarshals the request body into the context request data Payload field.
