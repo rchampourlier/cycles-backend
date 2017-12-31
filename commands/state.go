@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -27,12 +28,16 @@ func NewStateCommands(bucket string) *StateCommands {
 //      identifier than should be used with `DeleteState`.
 //   - `error`
 //
-func (c *StateCommands) StoreState(t time.Time, state string) (string, error) {
+func (c *StateCommands) StoreState(t time.Time, state interface{}) (string, error) {
 	s3 := golib.NewS3(c.Bucket)
 
-	key := fmt.Sprintf("%s.json", golib.TimestampWithDelimiter(t, "/"))
-	err := s3.CreateObject(key, []byte(state))
+	stateJSON, err := json.Marshal(state)
+	if err != nil {
+		return "", err
+	}
 
+	key := fmt.Sprintf("%s.json", golib.TimestampWithDelimiter(t, "/"))
+	err = s3.CreateObject(key, stateJSON)
 	return key, err
 }
 

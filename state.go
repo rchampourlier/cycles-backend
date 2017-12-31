@@ -1,4 +1,4 @@
-package controllers
+package main
 
 import (
 	"time"
@@ -29,6 +29,7 @@ func NewStateController(service *goa.Service, commands *commands.StateCommands, 
 func (c *StateController) Create(ctx *app.CreateStateContext) error {
 	// StateController_Create: start_implement
 
+	// Put your logic here
 	_, err := c.StoreState(time.Now(), ctx.Payload.State)
 	if err != nil {
 		return ctx.InternalServerError(err)

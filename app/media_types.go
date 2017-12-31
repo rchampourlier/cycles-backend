@@ -14,6 +14,6 @@ package app
 //
 // Identifier: application/cycles.state+json; view=default
 type CyclesState struct {
-	// JSON state of the application
-	State *string `form:"state,omitempty" json:"state,omitempty" xml:"state,omitempty"`
+	// Application state
+	State *interface{} `form:"state,omitempty" json:"state,omitempty" xml:"state,omitempty"`
 }

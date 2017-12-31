@@ -9,7 +9,6 @@ import (
 	"github.com/goadesign/goa"
 	"github.com/goadesign/goa/middleware"
 	"github.com/rchampourlier/cycles-backend/app"
-	"github.com/rchampourlier/cycles-backend/app/controllers"
 	"github.com/rchampourlier/cycles-backend/commands"
 	"github.com/rchampourlier/cycles-backend/queries"
 )
@@ -35,7 +34,7 @@ func main() {
 	service.Use(middleware.Recover())
 
 	// Mount "state" controller
-	c := controllers.NewStateController(service, stateCommands, stateQueries)
+	c := NewStateController(service, stateCommands, stateQueries)
 	app.MountStateController(service, c)
 
 	// Start service

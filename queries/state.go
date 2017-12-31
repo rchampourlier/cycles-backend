@@ -1,6 +1,7 @@
 package queries
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/rchampourlier/golib"
@@ -24,15 +25,22 @@ func NewStateQueries(bucket string) *StateQueries {
 
 // GetLatestState returns the latest stored state. The timestamp
 // used as a key is used to determine which one is the latest.
-func (q *StateQueries) GetLatestState() (string, error) {
+func (q *StateQueries) GetLatestState() (interface{}, error) {
+	var state interface{}
+
 	s3 := golib.NewS3(q.Bucket)
 	key, err := s3.FindLatestInTimestampPrefixedObjects("/")
 	if err != nil {
-		return "", err
+		return state, err
 	}
 	if key == nil {
-		return "", fmt.Errorf("not found")
+		return state, fmt.Errorf("not found")
 	}
 	contents, err := s3.FetchObject(*key)
-	return string(contents), err
+	err = json.Unmarshal(contents, &state)
+	if err != nil {
+		return state, err
+	}
+
+	return state, nil
 }

@@ -12,7 +12,8 @@ package app
 
 // statePayload user type.
 type statePayload struct {
-	State *string `form:"state,omitempty" json:"state,omitempty" xml:"state,omitempty"`
+	// Application state
+	State *interface{} `form:"state,omitempty" json:"state,omitempty" xml:"state,omitempty"`
 }
 
 // Publicize creates StatePayload from statePayload
@@ -26,5 +27,6 @@ func (ut *statePayload) Publicize() *StatePayload {
 
 // StatePayload user type.
 type StatePayload struct {
-	State *string `form:"state,omitempty" json:"state,omitempty" xml:"state,omitempty"`
+	// Application state
+	State *interface{} `form:"state,omitempty" json:"state,omitempty" xml:"state,omitempty"`
 }

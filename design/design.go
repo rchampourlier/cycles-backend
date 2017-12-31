@@ -45,7 +45,7 @@ var StateMedia = MediaType("application/cycles.state+json", func() {
 	Description("State of the Cycles frontend application")
 	Reference(StatePayload)
 	Attributes(func() {
-		Attribute("state", String, "JSON state of the application")
+		Attribute("state")
 	})
 
 	View("default", func() {
@@ -54,6 +54,6 @@ var StateMedia = MediaType("application/cycles.state+json", func() {
 })
 
 var StatePayload = Type("StatePayload", func() {
-	Attribute("state", func() {
+	Attribute("state", Any, "Application state", func() {
 	})
 })

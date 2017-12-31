@@ -38,7 +38,8 @@ func NewCreateStateContext(ctx context.Context, r *http.Request, service *goa.Se
 
 // createStatePayload is the state create action payload.
 type createStatePayload struct {
-	State *string `form:"state,omitempty" json:"state,omitempty" xml:"state,omitempty"`
+	// Application state
+	State *interface{} `form:"state,omitempty" json:"state,omitempty" xml:"state,omitempty"`
 }
 
 // Validate runs the validation rules defined in the design.
@@ -60,15 +61,8 @@ func (payload *createStatePayload) Publicize() *CreateStatePayload {
 
 // CreateStatePayload is the state create action payload.
 type CreateStatePayload struct {
-	State string `form:"state" json:"state" xml:"state"`
-}
-
-// Validate runs the validation rules defined in the design.
-func (payload *CreateStatePayload) Validate() (err error) {
-	if payload.State == "" {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "state"))
-	}
-	return
+	// Application state
+	State interface{} `form:"state" json:"state" xml:"state"`
 }
 
 // Created sends a HTTP response with status code 201.
