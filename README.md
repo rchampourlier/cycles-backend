@@ -11,6 +11,8 @@ Backend API for [Cycles](https://github.com/rchampourlier/cycles) project manage
 ### In development
 
 ```
+cp .env.example .env
+source .env
 go run *.go
 ```
 
