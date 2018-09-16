@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/rchampourlier/golib"
+	"github.com/rchampourlier/golib/s3"
 )
 
 // StateQueries stores the application context to be used to perform
@@ -28,15 +28,15 @@ func NewStateQueries(bucket string) *StateQueries {
 func (q *StateQueries) GetLatestState() (interface{}, error) {
 	var state interface{}
 
-	s3 := golib.NewS3(q.Bucket)
-	key, err := s3.FindLatestInTimestampPrefixedObjects("/")
+	s3c := s3.NewS3(q.Bucket)
+	key, err := s3c.FindLatestInTimestampPrefixedObjects("/states/")
 	if err != nil {
 		return state, err
 	}
 	if key == nil {
 		return state, fmt.Errorf("not found")
 	}
-	contents, err := s3.FetchObject(*key)
+	contents, err := s3c.FetchObject(*key)
 	err = json.Unmarshal(contents, &state)
 	if err != nil {
 		return state, err

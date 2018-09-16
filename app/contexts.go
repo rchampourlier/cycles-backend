@@ -16,6 +16,79 @@ import (
 	"net/http"
 )
 
+// PushEventsContext provides the events push action context.
+type PushEventsContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+	Payload *PushEventsPayload
+}
+
+// NewPushEventsContext parses the incoming request URL and body, performs validations and creates the
+// context used by the events controller push action.
+func NewPushEventsContext(ctx context.Context, r *http.Request, service *goa.Service) (*PushEventsContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	req.Request = r
+	rctx := PushEventsContext{Context: ctx, ResponseData: resp, RequestData: req}
+	return &rctx, err
+}
+
+// pushEventsPayload is the events push action payload.
+type pushEventsPayload struct {
+	// Event
+	Event *interface{} `form:"event,omitempty" json:"event,omitempty" xml:"event,omitempty"`
+}
+
+// Validate runs the validation rules defined in the design.
+func (payload *pushEventsPayload) Validate() (err error) {
+	if payload.Event == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "event"))
+	}
+	return
+}
+
+// Publicize creates PushEventsPayload from pushEventsPayload
+func (payload *pushEventsPayload) Publicize() *PushEventsPayload {
+	var pub PushEventsPayload
+	if payload.Event != nil {
+		pub.Event = *payload.Event
+	}
+	return &pub
+}
+
+// PushEventsPayload is the events push action payload.
+type PushEventsPayload struct {
+	// Event
+	Event interface{} `form:"event" json:"event" xml:"event"`
+}
+
+// OK sends a HTTP response with status code 200.
+func (ctx *PushEventsContext) OK(r *CyclesState) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/cycles.state+json")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
+}
+
+// BadRequest sends a HTTP response with status code 400.
+func (ctx *PushEventsContext) BadRequest(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
+}
+
+// InternalServerError sends a HTTP response with status code 500.
+func (ctx *PushEventsContext) InternalServerError(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 500, r)
+}
+
 // CreateStateContext provides the state create action context.
 type CreateStateContext struct {
 	context.Context

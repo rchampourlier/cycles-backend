@@ -1,5 +1,3 @@
-//go:generate goagen bootstrap -d github.com/rchampourlier/cycles-backend/design
-
 package main
 
 import (
@@ -22,6 +20,7 @@ func main() {
 
 	// Create commands and queries
 	stateCommands := commands.NewStateCommands(bucket)
+	eventsCommands := commands.NewEventsCommands(bucket)
 	stateQueries := queries.NewStateQueries(bucket)
 
 	// Create service
@@ -34,8 +33,12 @@ func main() {
 	service.Use(middleware.Recover())
 
 	// Mount "state" controller
-	c := NewStateController(service, stateCommands, stateQueries)
-	app.MountStateController(service, c)
+	sc := NewStateController(service, stateCommands, stateQueries)
+	app.MountStateController(service, sc)
+
+	// Mount "events" controller
+	ec := NewEventsController(service, eventsCommands, stateQueries)
+	app.MountEventsController(service, ec)
 
 	// Start service
 	if err := service.ListenAndServe(":8081"); err != nil {

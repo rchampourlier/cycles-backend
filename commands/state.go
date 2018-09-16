@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/rchampourlier/golib"
+	"github.com/rchampourlier/golib/s3"
 )
 
 // StateCommands stores the application context to be used to perform
@@ -29,7 +30,7 @@ func NewStateCommands(bucket string) *StateCommands {
 //   - `error`
 //
 func (c *StateCommands) StoreState(t time.Time, state interface{}) (string, error) {
-	s3 := golib.NewS3(c.Bucket)
+	s3c := s3.NewS3(c.Bucket)
 
 	stateJSON, err := json.Marshal(state)
 	if err != nil {
@@ -37,14 +38,14 @@ func (c *StateCommands) StoreState(t time.Time, state interface{}) (string, erro
 	}
 
 	key := fmt.Sprintf("%s.json", golib.TimestampWithDelimiter(t, "/"))
-	err = s3.CreateObject(key, stateJSON)
+	err = s3c.CreateObject(key, stateJSON)
 	return key, err
 }
 
 // DeleteState deletes the state specified by its identifier (returned by
 // `CreateState`.
 func (c *StateCommands) DeleteState(stateID string) error {
-	s3 := golib.NewS3(c.Bucket)
-	err := s3.DeleteObject(stateID)
+	s3c := s3.NewS3(c.Bucket)
+	err := s3c.DeleteObject(stateID)
 	return err
 }

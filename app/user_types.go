@@ -10,6 +10,86 @@
 
 package app
 
+// eventPayload user type.
+type eventPayload struct {
+	// Event
+	Event *interface{} `form:"event,omitempty" json:"event,omitempty" xml:"event,omitempty"`
+}
+
+// Publicize creates EventPayload from eventPayload
+func (ut *eventPayload) Publicize() *EventPayload {
+	var pub EventPayload
+	if ut.Event != nil {
+		pub.Event = ut.Event
+	}
+	return &pub
+}
+
+// EventPayload user type.
+type EventPayload struct {
+	// Event
+	Event *interface{} `form:"event,omitempty" json:"event,omitempty" xml:"event,omitempty"`
+}
+
+// role user type.
+type role struct {
+	// The identifier of the icon to use to display this role
+	Icon *string `form:"icon,omitempty" json:"icon,omitempty" xml:"icon,omitempty"`
+	// An unique identifier
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// The readable representation of the role
+	Read *string `form:"read,omitempty" json:"read,omitempty" xml:"read,omitempty"`
+}
+
+// Publicize creates Role from role
+func (ut *role) Publicize() *Role {
+	var pub Role
+	if ut.Icon != nil {
+		pub.Icon = ut.Icon
+	}
+	if ut.ID != nil {
+		pub.ID = ut.ID
+	}
+	if ut.Read != nil {
+		pub.Read = ut.Read
+	}
+	return &pub
+}
+
+// Role user type.
+type Role struct {
+	// The identifier of the icon to use to display this role
+	Icon *string `form:"icon,omitempty" json:"icon,omitempty" xml:"icon,omitempty"`
+	// An unique identifier
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// The readable representation of the role
+	Read *string `form:"read,omitempty" json:"read,omitempty" xml:"read,omitempty"`
+}
+
+// state user type.
+type state struct {
+	// Team members roles
+	Roles []*role `form:"roles,omitempty" json:"roles,omitempty" xml:"roles,omitempty"`
+}
+
+// Publicize creates State from state
+func (ut *state) Publicize() *State {
+	var pub State
+	if ut.Roles != nil {
+		pub.Roles = make([]*Role, len(ut.Roles))
+		for i2, elem2 := range ut.Roles {
+			pub.Roles[i2] = elem2.Publicize()
+		}
+	}
+	return &pub
+}
+
+// State user type.
+type State struct {
+	// Team members roles
+	Roles []*Role `form:"roles,omitempty" json:"roles,omitempty" xml:"roles,omitempty"`
+}
+
 // statePayload user type.
 type statePayload struct {
 	// Application state

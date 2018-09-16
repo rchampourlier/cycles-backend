@@ -28,6 +28,76 @@ func initService(service *goa.Service) {
 	service.Decoder.Register(goa.NewJSONDecoder, "*/*")
 }
 
+// EventsController is the controller interface for the Events actions.
+type EventsController interface {
+	goa.Muxer
+	Push(*PushEventsContext) error
+}
+
+// MountEventsController "mounts" a Events resource controller on the given service.
+func MountEventsController(service *goa.Service, ctrl EventsController) {
+	initService(service)
+	var h goa.Handler
+	service.Mux.Handle("OPTIONS", "/events/push", ctrl.MuxHandler("preflight", handleEventsOrigin(cors.HandlePreflight()), nil))
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewPushEventsContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		// Build the payload
+		if rawPayload := goa.ContextRequest(ctx).Payload; rawPayload != nil {
+			rctx.Payload = rawPayload.(*PushEventsPayload)
+		} else {
+			return goa.MissingPayloadError()
+		}
+		return ctrl.Push(rctx)
+	}
+	h = handleEventsOrigin(h)
+	service.Mux.Handle("POST", "/events/push", ctrl.MuxHandler("push", h, unmarshalPushEventsPayload))
+	service.LogInfo("mount", "ctrl", "Events", "action", "Push", "route", "POST /events/push")
+}
+
+// handleEventsOrigin applies the CORS response headers corresponding to the origin.
+func handleEventsOrigin(h goa.Handler) goa.Handler {
+
+	return func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		origin := req.Header.Get("Origin")
+		if origin == "" {
+			// Not a CORS request
+			return h(ctx, rw, req)
+		}
+		if cors.MatchOrigin(origin, "http://localhost:8080") {
+			ctx = goa.WithLogContext(ctx, "origin", origin)
+			rw.Header().Set("Access-Control-Allow-Origin", origin)
+			rw.Header().Set("Vary", "Origin")
+			rw.Header().Set("Access-Control-Allow-Credentials", "false")
+			if acrm := req.Header.Get("Access-Control-Request-Method"); acrm != "" {
+				// We are handling a preflight request
+				rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+			}
+			return h(ctx, rw, req)
+		}
+
+		return h(ctx, rw, req)
+	}
+}
+
+// unmarshalPushEventsPayload unmarshals the request body into the context request data Payload field.
+func unmarshalPushEventsPayload(ctx context.Context, service *goa.Service, req *http.Request) error {
+	payload := &pushEventsPayload{}
+	if err := service.DecodeRequest(req, payload); err != nil {
+		return err
+	}
+	goa.ContextRequest(ctx).Payload = payload.Publicize()
+	return nil
+}
+
 // StateController is the controller interface for the State actions.
 type StateController interface {
 	goa.Muxer
